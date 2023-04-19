@@ -1,23 +1,21 @@
 import re
 
-from general import checking as asrchk
-from general.objects.dictionary import Dictionary
 from collections import Counter
+from typing import Union
 
-from general.objects.phx_annotation_tags import PhxAnnotationTags
-from general.sequences import TimeSequenceItem
+from phx_general.asr_annotations.phx_annotation_tags import PhxAnnotationTags
+from phx_general.sequences import TimeSequenceItem
+from typeguard import typechecked
+
+from phx_general.asr_dictionary.dictionary import Dictionary
 
 
+@typechecked
 class AnnotationSegment(TimeSequenceItem):
-
     EMPTY = ["<empty>"]
     rounding_ndigits = 2
 
-    def __init__(self, start, end, words):
-        asrchk.check_arg_type("start", start, float, can_be_none=False)
-        asrchk.check_arg_type("end", end, float, can_be_none=False)
-        asrchk.check_arg_type('words', words, list, can_be_none=False)  # prevents words to be single string
-        asrchk.check_arg_iterable('words', words, expected_elements_type=str, can_be_empty=False)
+    def __init__(self, start: float, end: float, words: list[str]):
         self.start_time = start
         self.end_time = end
         self._words = words
@@ -38,9 +36,7 @@ class AnnotationSegment(TimeSequenceItem):
     def end_time(self, value):
         self._end = round(value, self.rounding_ndigits)
 
-    def check(self, audio_length):
-        asrchk.check_arg_type("audio_length", audio_length, float, can_be_none=False)
-
+    def check(self, audio_length: float):
         if self.start_time >= self.end_time:
             raise ValueError(f"Segment start >= end - {self.start_time} >= {self.end_time}. "
                              "Either bad segment boundaries or an unnecessary empty segment")
@@ -126,8 +122,7 @@ class AnnotationSegment(TimeSequenceItem):
                 grapheme_counts[g] += 1
         return dict(grapheme_counts)
 
-    def _words_by_dictionary(self, dictionary_wordset=None, map_spelling=False):
-        asrchk.check_arg_type('dictionary_wordset', dictionary_wordset, set, can_be_none=True)
+    def _words_by_dictionary(self, dictionary_wordset: Union[set, None] = None, map_spelling=False):
 
         words = []
         for w in self._words:

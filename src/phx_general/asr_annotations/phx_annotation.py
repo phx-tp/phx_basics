@@ -1,26 +1,26 @@
+from __future__ import annotations
 import copy
 import logging
 import os
 import subprocess
 import re
-import typing
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from collections import Counter
+from typing import Union, Iterable
 
 import yaml
 
-from general.file import file2list, mkdirp, list2file
-from general.git.phx_git_repository import PhxGitRepository
-from general.objects.annotated_audio import AnnotatedAudio
-from general.objects.annotation_segment import AnnotationSegment
-from general.objects.dictionary import Dictionary
-from general.objects.phx_annotation_tags import PhxAnnotationTags
-from general.objects.wordset_iface import WordsetInterface
-from general.objects.common import sec2hms, hms2sec
-from general.objects.vad import Segmentation as VadSegmentation, VAD
-from general import checking as asrchk
-from general.score_stt.src.technologies import Technologies
+from phx_general.file import file2list, check_file, list2file
+from phx_general.git.phx_git_repository import PhxGitRepository
+from phx_general.asr_annotations.annotated_audio import AnnotatedAudio
+from phx_general.asr_annotations.annotation_segment import AnnotationSegment
+from phx_general.asr_dictionary.dictionary import Dictionary
+from phx_general.asr_annotations.phx_annotation_tags import PhxAnnotationTags
+from phx_general.type import path_type
+from phx_general.unit_conversion import hms2sec, sec2hms
+from phx_general.wordset_iface import WordsetInterface
+from phx_general.vad import Segmentation as VadSegmentation, VAD
 
 _logger = logging.getLogger(__name__)
 
@@ -123,11 +123,11 @@ class PhxAnnotation(WordsetInterface):
 
     def __init__(self,
                  source_directory=None,
-                 is_train=True,
-                 override_audio_paths=None,
-                 phx_gitlab_server=PhxGitRepository.DEFAULT_PHX_GITLAB_SERVER,
-                 repository_path=None,
-                 framerate=FRAMERATE,
+                 is_train: bool = True,
+                 override_audio_paths: Union[str, None] = None,
+                 phx_gitlab_server: str = PhxGitRepository.DEFAULT_PHX_GITLAB_SERVER,
+                 repository_path: Union[str, None] = None,
+                 framerate: int = FRAMERATE,
                  ):
         """
         @param source_directory Directory with phx_annotation and test.list or a git folder from datasets repository
@@ -135,13 +135,6 @@ class PhxAnnotation(WordsetInterface):
         @param repository_path   If specified, this location is used to look for git repositories to download/copy files
                                 from instead of cloning whole dataset directory
         """
-
-        asrchk.check_arg_type("is_train", is_train, bool, can_be_none=False)
-        asrchk.check_arg_type("override_audio_paths", override_audio_paths, str, can_be_none=True)
-        asrchk.check_arg_type("phx_gitlab_server", phx_gitlab_server, str, can_be_none=False)
-        asrchk.check_arg_type("framerate", framerate, int, can_be_none=False)
-        asrchk.check_arg_type("repository_path", repository_path, str, can_be_none=True)
-
         self._framerate = framerate
         self._annotated_audio = dict()  # { path: AnnotatedAudio }
         self.is_train = is_train
@@ -169,7 +162,7 @@ class PhxAnnotation(WordsetInterface):
         self.override_audio_paths = override_audio_paths
 
     @property
-    def annotated_audio(self) -> typing.Dict[str, AnnotatedAudio]:
+    def annotated_audio(self) -> dict[str, AnnotatedAudio]:
         return self._annotated_audio
 
     def get_voice_segmentation(self):
@@ -211,12 +204,11 @@ class PhxAnnotation(WordsetInterface):
             text.extend(annotated_audio.get_text_for_lm())
         return text
 
-    def get_text_for_am(self, dictionary_wordset):
+    def get_text_for_am(self, dictionary_wordset: set):
         """
         @param dicionary_wordset Set containing all words from dictionary for word filtering
         Returns list of text lines (~segments) stored in phx annotation
         """
-        asrchk.check_arg_type('dictionary_wordset', dictionary_wordset, set, can_be_none=True)
         text = list()
         for annotated_audio in self._annotated_audio.values():
             text.extend(annotated_audio.get_text_for_am(dictionary_wordset))
@@ -253,7 +245,7 @@ class PhxAnnotation(WordsetInterface):
         """
         return [aa.file_id for aa in self._annotated_audio.values()]
 
-    def check(self, expected_graphemes=None, permissive=False, shallow=False):
+    def check(self, expected_graphemes: Union[Iterable[str], None] = None, permissive: bool = False, shallow: bool = False):
         """
         Checks whether there are not common mistakes/problems in the input phx_annotation
         @param expected_graphemes List of chars - allowed graphemes, if some other grapheme shall occur, error is thrown
@@ -262,15 +254,10 @@ class PhxAnnotation(WordsetInterface):
         @param shallow If True, physical data of wav files are not read - hashes are not generated, segment overlaps
                        and annotations past end (pre start) of the recording are not detected,
         """
-        asrchk.check_arg_type("permissive", permissive, bool, can_be_none=False)
-
         fail = False
         if permissive:
             # disable grapheme check
             expected_graphemes = None
-
-        if expected_graphemes:
-            asrchk.check_arg_iterable('expected_graphemes', expected_graphemes, str, can_be_empty=False)
 
         unfound_expected_graphemes = set()
         if expected_graphemes:
@@ -441,7 +428,7 @@ class PhxAnnotation(WordsetInterface):
         self._reset()
         self.load_metadata(directory)
         source_file = os.path.join(directory, self.get_source_file_name())
-        asrchk.check_file_access(source_file, 'r')
+        check_file(source_file)
         fail = False
         re_time = re.compile(r"^\d+(?:\.\d+){0,1}$")
         re_audiopath = re.compile(r"^<[a-zA-Z0-9_\./-]+>$")
@@ -499,13 +486,12 @@ class PhxAnnotation(WordsetInterface):
         return self._override_audio_paths
 
     @override_audio_paths.setter
-    def override_audio_paths(self, new_audio_dir):
+    def override_audio_paths(self, new_audio_dir: Union[str, None]):
         """
         Change default audio dir to new audio dir
         :param new_audio_dir:
         :return:
         """
-        asrchk.check_arg_type("new_audio_dir", new_audio_dir, str, can_be_none=True)
         self._override_audio_paths = new_audio_dir
         if new_audio_dir:
             if len(self._annotated_audio) == 0:
@@ -518,10 +504,10 @@ class PhxAnnotation(WordsetInterface):
 
     def load_metadata(self, directory):
         dataset_info = os.path.join(directory, 'dataset.info')
-        asrchk.check_file_access(dataset_info, 'r')
+        check_file(dataset_info)
         self.metadata.load(dataset_info)
 
-    def add_audio_segmentation(self, segmentation, permissive=True):
+    def add_audio_segmentation(self, segmentation: VadSegmentation, permissive=True):
         """
         Creates AnnotatedAudio instances with empty segments.
         @param segmentation general.objects.vad.Segmentation (as returned e.g. by VAD)  @see general.objects.vad.Segmentation
@@ -529,8 +515,6 @@ class PhxAnnotation(WordsetInterface):
         @param permissive   If True, tries to load as many of the segmented audio as possible, in case of an error,
                             the audiofile is simply skipped
         """
-        asrchk.check_arg_type("segmentation", segmentation, VadSegmentation, can_be_none=False)
-
         # no longer just this PhxAnnotation
         self._source += "+segmentation"
         self._dataset_name += "+segmentation"
@@ -577,13 +561,11 @@ class PhxAnnotation(WordsetInterface):
         if has_error:
             raise ValueError(f"Adding of segmentation into {self.get_name()} failed - check log")
 
-    def merge(self, other_phx_annotation):
+    def merge(self, other_phx_annotation: PhxAnnotation):
         """
         Merges another PhxAnnotation into this one
         @param other_phx_annotation The PhxAnnotation to be merged into this one
         """
-        asrchk.check_arg_type("other_phx_annotation", other_phx_annotation, PhxAnnotation, can_be_none=False)
-
         if self.is_train != other_phx_annotation.is_train:
             raise ValueError("It is not possible to merge different types of PhxAnnotation. "
                              f"(self.is_train={self.is_train}) != (other.is_train={other_phx_annotation.is_train})")
@@ -645,15 +627,13 @@ class PhxAnnotation(WordsetInterface):
     def get_source_file_name(self):
         raise NotImplementedError('Please implement get_source_file_name() method in child class of PhxAnnotation')
 
-    def get_duplicate(self, other):
+    def get_duplicate(self, other: PhxAnnotation):
         """
         Check self and other PhxAnnotationfor duplicities
         @param other Another PhxAnnotation to be checked for duplicates
         @return List of lists with duplicate filenames e.g.  [[name_self1, name_self2, name_other1], [name_other1, name_other2]]
         """
         # TODO do audio thumbnail and check them - not only hashes
-        asrchk.check_arg_type("other", other, PhxAnnotation, can_be_none=False)
-
         self_audiofile_hashes = set([af.get_hash() for af in self._annotated_audio.values()])
         other_audiofile_hashes = set([af.get_hash() for af in other._annotated_audio.values()])
         duplicate_hashes = self_audiofile_hashes.intersection(other_audiofile_hashes)
@@ -765,7 +745,7 @@ class PhxAnnotation(WordsetInterface):
 
     def _source_test_list(self, source_directory):
         test_list_path = os.path.join(source_directory, self.TEST_LIST_BASENAME)
-        asrchk.check_file_access(test_list_path, 'r')
+        check_file(test_list_path)
         test_list = file2list(test_list_path)
         test_audiofiles = set()
         for path in test_list:
@@ -781,14 +761,13 @@ class PhxAnnotation(WordsetInterface):
         return test_audiofiles
 
     def write_as_bsapi_transcriptions(self,
-                                      output_directory: typing.Union[Path, str],
+                                      output_directory: path_type,
                                       words_delimiter: str = "_",
-                                      transcription_suffix: str = Technologies.get_suffix(
-                                          Technologies.OFFLINEREC.value)):
+                                      transcription_suffix: str = ".trn"):
         """
         Convert to ".trn" files
         """
-        mkdirp(output_directory)
+        os.makedirs(output_directory, exist_ok=True)
         for wav_path, annotated_audio in self._annotated_audio.items():
             file_path = Path(output_directory) / f"{annotated_audio.file_id}{transcription_suffix}"
             output = list()
@@ -796,6 +775,6 @@ class PhxAnnotation(WordsetInterface):
                 output.append(f"{round(segment.start_time*VAD.HTK_TIME_MULTIPLICATION_CONSTANT)} "
                               f"{round(segment.end_time*VAD.HTK_TIME_MULTIPLICATION_CONSTANT)} "
                               f"{words_delimiter.join(segment.get_text().split())} 1 1 1")
-            list2file(file_path, output)
+            list2file(output, file_path)
             # start_time end_time word probability likelihood channel_index
 

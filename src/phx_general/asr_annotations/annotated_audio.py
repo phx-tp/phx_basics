@@ -2,16 +2,18 @@ import hashlib
 import logging
 import os
 import re
-import sys
 import wave
 from collections import Counter
-from general.objects.annotation_segment import AnnotationSegment
-from general import checking as asrchk
-from general.objects.vad import VAD
+
+from typeguard import typechecked
+
+from phx_general.asr_annotations.annotation_segment import AnnotationSegment
+from phx_general.file import check_file
+from phx_general.vad import VAD
 
 _logger = logging.getLogger(__name__)
 
-
+@typechecked
 class AnnotatedAudio:
 
     BSAPI_VOICE_LABEL = "voice"
@@ -23,11 +25,7 @@ class AnnotatedAudio:
     # may clog utterance processing in Kaldi
     _MAX_SEGMENT_LENGTH = 9999999.0
 
-    def __init__(self, file_id, speaker, path, framerate):
-        asrchk.check_arg_type("file_id", file_id, str, can_be_none=False)
-        asrchk.check_arg_type("speaker", path, str, can_be_none=False)
-        asrchk.check_arg_type("path", path, str, can_be_none=False)
-        asrchk.check_arg_type("framerate", framerate, int, can_be_none=False)
+    def __init__(self, file_id: str, speaker: str, path: str, framerate: int):
 
         self.path = os.path.normpath(path)
         self._length = None             # total length of audio
@@ -56,8 +54,8 @@ class AnnotatedAudio:
                              f"wave file without the *.wav extension")
 
     def check(self, shallow=False):
-        asrchk.check_file_access(self.path, 'r')  # Check that file exists and is accessible
-        asrchk.check_file_extension(self.path, ".wav")  # Only allow wav files with lowercase .wav extension
+        check_file(self.path)
+        assert str(self.path).endswith(".wav")
 
         if not shallow:
             self.read_and_check_physical_file()
@@ -113,12 +111,11 @@ class AnnotatedAudio:
         self.read_and_check_physical_file()
         return self._audio_md5
 
-    def add_segment(self, segment):
+    def add_segment(self, segment: AnnotationSegment):
         """
         Adds a segment that belongs to this audio file into database
         @param segment  general.objects.AnnotationSegment of this file
         """
-        asrchk.check_arg_type("segment", segment, AnnotationSegment, can_be_none=False)
         segment_length = segment.end_time - segment.start_time
         if segment_length > AnnotatedAudio._MAX_SEGMENT_LENGTH:
             _logger.warning(f"OMITTED: Segment {self.path} {segment.start_time}s-{segment.end_time}s is too long. Maximum segment length "

@@ -2,10 +2,10 @@ import logging
 import os
 import re
 
-from general.file import list2file
-from general.objects.annotated_audio import AnnotatedAudio
-from general.objects.annotation_segment import AnnotationSegment
-from general.objects.phx_annotation import PhxAnnotation
+from phx_general.file import list2file
+from phx_general.asr_annotations.annotated_audio import AnnotatedAudio
+from phx_general.asr_annotations.annotation_segment import AnnotationSegment
+from phx_general.asr_annotations.phx_annotation import PhxAnnotation
 
 _logger = logging.getLogger(__name__)
 

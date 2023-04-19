@@ -4,8 +4,11 @@
 """
 General utilities for working with files, directories, filesystems
 """
+import builtins
+import gzip
+import re
 from pathlib import Path
-from typing import Union, Iterable
+from typing import Iterable
 
 import os
 import shutil
@@ -13,19 +16,29 @@ import logging
 import zipfile
 from typeguard import typechecked
 
-
-@typechecked
-def check_file(file_path: Union[str, Path]):
-    assert Path(file_path).is_file(), f"'{file_path}' is not a file"
+from phx_general.type import path_type
 
 
 @typechecked
-def check_dir(dir_path: Union[str, Path]):
-    assert Path(dir_path).is_dir(), f"'{dir_path}' is not a directory"
+def check_dir(filepath: path_type):
+    if not Path(filepath).is_dir():
+        if Path(filepath).is_file():
+            raise NotADirectoryError(f"Path '{str(filepath)}' is file, not directory")
+        else:
+            raise NotADirectoryError(f"Directory '{str(filepath)}' doesn't exist")
 
 
 @typechecked
-def mkpdirp(file_path: Union[str, Path]):
+def check_file(filepath: path_type):
+    if not Path(filepath).is_file():
+        if Path(filepath).is_dir():
+            raise FileExistsError(f"Path '{str(filepath)}' is directory, not file")
+        else:
+            raise FileNotFoundError(f"File '{str(filepath)}' doesn't exist")
+
+
+@typechecked
+def mkpdirp(file_path: path_type):
     """
     Create parent directory of file (can be dir too), no error if existing, make parent directories as needed
     :param file_path: file path
@@ -40,7 +53,7 @@ def mkpdirp(file_path: Union[str, Path]):
 
 
 @typechecked
-def file2list(file_path: Union[str, Path], strip=True):
+def file2list(file_path: path_type, strip=True):
     """
     Source file to list
     :param strip: (bool) if to strip every line
@@ -59,7 +72,7 @@ def file2list(file_path: Union[str, Path], strip=True):
 
 
 @typechecked
-def file2set(file_path: Union[str, Path]):
+def file2set(file_path: path_type):
     """
     load set from file where every striped line from file added
     :param file_path: path to input file
@@ -73,7 +86,7 @@ def file2set(file_path: Union[str, Path]):
     return l_set
 
 
-def list2file(lines: Iterable, file_path: Union[str, Path], add_sep=True):
+def list2file(lines: Iterable, file_path: path_type, add_sep=True):
     """
     Write list to file one row by row
     :param add_sep: (bool) add line separator to the end of every line
@@ -90,7 +103,7 @@ def list2file(lines: Iterable, file_path: Union[str, Path], add_sep=True):
             fout.writelines(lines)
 
 
-def file2dict(file_path: Union[str, Path], sep="\t"):
+def file2dict(file_path: path_type, sep="\t"):
     """
     source dictionary from file where first column is key and second is value
     :param file_path: path to input file
@@ -108,7 +121,7 @@ def file2dict(file_path: Union[str, Path], sep="\t"):
     return out_dict
 
 
-def file2iter(file_path: Union[str, Path], strip=True):
+def file2iter(file_path: path_type, strip=True):
     """
     Source file to iterator
     :param strip: (bool) if to strip every line
@@ -124,7 +137,7 @@ def file2iter(file_path: Union[str, Path], strip=True):
                 yield line
 
 
-def zip_folder(folder_path: Union[str, Path], output_path: Union[str, Path]):
+def zip_folder(folder_path: path_type, output_path: path_type):
     """
     Zip the contents of an entire folder (without that folder included
     in the archive). Empty subfolders will be included in the archive
@@ -180,7 +193,7 @@ def kw_range(starting_kw, ending_kw, input_list):
     return output_list
 
 
-def safe_copy(src: Union[str, Path], dst: Union[str, Path]):
+def safe_copy(src: path_type, dst: path_type):
     """
     copy file even if dst exists and even dst is a symlink
     """
@@ -192,7 +205,7 @@ def safe_copy(src: Union[str, Path], dst: Union[str, Path]):
     shutil.copy(src, dst)
 
 
-def file2id_dict(file: Union[str, Path], strip: bool = True, delimiter: str = "\t"):
+def file2id_dict(file: path_type, strip: bool = True, delimiter: str = "\t"):
     """
     Source file and save to Dict[str, List[tuple[str]]], when key is first column. Keys can be repeated but must be
     sorted (). This format is usually used in KALDI. Value is List of rest of columns saved as tuple.
@@ -212,3 +225,11 @@ def file2id_dict(file: Union[str, Path], strip: bool = True, delimiter: str = "\
             prev_key = key
         value_list.append(value)
     return id_dict
+
+
+@typechecked
+class GzipOpener:
+    @staticmethod
+    def open(input_path: str):
+        _open = (lambda x: builtins.open(x, "r")) if not re.fullmatch("^.*\\.gz$", input_path) else lambda x: gzip.open(x, "rt")
+        return _open(input_path)
