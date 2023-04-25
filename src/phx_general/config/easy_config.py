@@ -69,9 +69,11 @@ class EasyCfg:
             try:
                 if value is None and not can_be_none:
                     raise ValueError()
+                elif value is None and can_be_none:
+                    value = None
                 elif not isinstance(value, attribute_type.value):
                     value = attribute_type.value(value)
-            except ValueError:
+            except (ValueError, TypeError):
                 raise TypeError(f"Variable '{attribute_name}' should be type '{attribute_type.value}', "
                                 f"but is '{type(value)}' in config '{self._config_path}'")
         setattr(self, attribute_name, value)

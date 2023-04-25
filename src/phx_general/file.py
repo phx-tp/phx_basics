@@ -4,7 +4,6 @@
 """
 General utilities for working with files, directories, filesystems
 """
-import builtins
 import gzip
 import re
 from pathlib import Path
@@ -44,7 +43,6 @@ def mkpdirp(file_path: path_type):
     :param file_path: file path
     :return:
     """
-    check_file(file_path)
     directory = os.path.dirname(file_path)
     # don't throw error when path is relative and parent directory is current directory
     if directory == "":
@@ -230,6 +228,6 @@ def file2id_dict(file: path_type, strip: bool = True, delimiter: str = "\t"):
 @typechecked
 class GzipOpener:
     @staticmethod
-    def open(input_path: str):
-        _open = (lambda x: builtins.open(x, "r")) if not re.fullmatch("^.*\\.gz$", input_path) else lambda x: gzip.open(x, "rt")
+    def open_file(input_path: str):
+        _open = (lambda x: open(x, "r")) if not re.fullmatch("^.*\\.gz$", input_path) else lambda x: gzip.open(x, "rt")
         return _open(input_path)

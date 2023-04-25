@@ -27,6 +27,7 @@ _logger = logging.getLogger(__name__)
 
 class PhxAnnotation(WordsetInterface):
 
+    DEFAULT_CHANNEL_ID = "A"
     DEFAULT_AUDIO_DIR = "/media/marvin"
     FRAMERATE = 8000
 

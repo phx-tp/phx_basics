@@ -14,7 +14,7 @@ from phx_general.bsapi.create_bsapi_cfg import ConfigGenerator
 from phx_general.git.phx_git_repository import PhxGitRepository
 from phx_general.lm.language_model import Arpa
 from phx_general.shell import shell
-from phx_general.file import list2file, file2list
+from phx_general.file import list2file, file2list, check_file
 
 from phx_general.cpu_utils import check_cores
 
@@ -38,13 +38,13 @@ class G2P:
     @param bsapi_bin Path to BSAPI phxcmd binary
     @param g2p_cfg G2P configuration. Either a *.bs g2p filename you may use 
     """
-    def __init__(self, phxcmd_bin, g2p_cfg, cores=None):
-        assert Path(phxcmd_bin).is_file(), phxcmd_bin
+    def __init__(self, phxcmd_bin, g2p_cfg, cores: int = 1):
+        check_file(phxcmd_bin)
         self.phxcmd_bin = phxcmd_bin
         self.g2p_dict = list()
         self.untranslatable = set()
         self.delimiter = "\t"
-        self._cores = None if cores is None else check_cores(cores)
+        self._cores = check_cores(cores)
         self._g2p_cfg = g2p_cfg
         self._last_input_list_hash = None
 
@@ -82,7 +82,7 @@ class G2P:
         :return: path to file with input wordlist
         """
         input_wordlist_file = os.path.join(directory, "tmp_list")
-        list2file(input_wordlist_file, input_wordlist, add_sep=True)
+        list2file(input_wordlist, input_wordlist_file, add_sep=True)
         return input_wordlist_file
 
     def _run_g2p(self, g2p_conf, output_dir, input_file=None, input_list=None):
@@ -145,11 +145,10 @@ class G2P:
             return
         self._last_input_list_hash = input_hash
         with TemporaryDirectory() as tmp_dir:
-            if self._cores is None or self._cores == 1:
+            if self._cores == 1:
                 tmp_input = self._create_temp_input_file(tmp_dir, input_list)
                 tmp_out = self._run_g2p(self._g2p_cfg, tmp_dir, input_file=tmp_input)
                 self.g2p_dict = file2list(tmp_out, strip=True)
-
             else:
                 tmp_input_list = self._prepare_multithreads_inputs(tmp_dir, input_list)
                 tmp_input_list_file = self._create_temp_input_file(tmp_dir, tmp_input_list)
@@ -203,12 +202,11 @@ class G2P:
         return g2p_cfg
 
     def _prepare_multithreads_inputs(self, tmp_dir, input_list):
-        n_chunks = self._cores if self._cores != 0 else multiprocessing.cpu_count()
         counter = 0
         input_files_list = list()
-        for chunk in np.array_split(input_list, n_chunks):
+        for chunk in np.array_split(input_list, self._cores):
             chunk_file_path = os.path.join(tmp_dir, f"tmp_file{counter}.txt")
-            list2file(chunk_file_path, chunk)
+            list2file(chunk, chunk_file_path)
             input_files_list.append(chunk_file_path)
             counter += 1
         return input_files_list

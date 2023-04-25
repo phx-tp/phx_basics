@@ -10,11 +10,11 @@ from typeguard import typechecked
 from phx_general.asr_dictionary.dictionary import Dictionary
 
 
-@typechecked
 class AnnotationSegment(TimeSequenceItem):
     EMPTY = ["<empty>"]
     rounding_ndigits = 2
 
+    @typechecked
     def __init__(self, start: float, end: float, words: list[str]):
         self.start_time = start
         self.end_time = end
@@ -22,11 +22,11 @@ class AnnotationSegment(TimeSequenceItem):
 
     @property
     def start_time(self):
-        return self._start
+        return self._start_time
 
     @start_time.setter
     def start_time(self, value):
-        self._start = round(value, self.rounding_ndigits)
+        self._start_time = round(value, self.rounding_ndigits)
 
     @property
     def end_time(self):
@@ -36,6 +36,11 @@ class AnnotationSegment(TimeSequenceItem):
     def end_time(self, value):
         self._end = round(value, self.rounding_ndigits)
 
+    @property
+    def length(self):
+        return self.end_time - self.start_time
+
+    @typechecked
     def check(self, audio_length: float):
         if self.start_time >= self.end_time:
             raise ValueError(f"Segment start >= end - {self.start_time} >= {self.end_time}. "
@@ -63,12 +68,14 @@ class AnnotationSegment(TimeSequenceItem):
             if w.lower() != w:
                 raise ValueError(f"Word '{w}' in annotation is not lowercase!")
 
+    @typechecked
     def get_words(self):
         """
         Returns set of all words that are contained in segment
         """
         return set(self._words)
 
+    @typechecked
     def get_text(self, clean_tags=False):
         """
         Returns string - text line (~segments) stored in segment
@@ -122,6 +129,7 @@ class AnnotationSegment(TimeSequenceItem):
                 grapheme_counts[g] += 1
         return dict(grapheme_counts)
 
+    @typechecked
     def _words_by_dictionary(self, dictionary_wordset: Union[set, None] = None, map_spelling=False):
 
         words = []

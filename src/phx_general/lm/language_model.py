@@ -237,7 +237,7 @@ class LanguageModel(GzipOpener):
         """
         ngram_counts = list()
         regexp_ngram = re.compile("\\\\[0-9]-grams:\\s*")  # e.g.: \1-grams:
-        with self.open(arpa_path) as fin:
+        with self.open_file(arpa_path) as fin:
             try:
                 while True:
                     arpa_line = fin.readline()
@@ -429,7 +429,7 @@ class Arpa(WordsetInterface, GzipOpener):
         check_file(lm_path)
         self._lm_path = lm_path
         is_arpa = False
-        with self.open(self._lm_path) as fin:
+        with self.open_file(self._lm_path) as fin:
             for i in range(5):
                 line = fin.readline()
                 if line.startswith(Arpa.data_section_start):
@@ -445,7 +445,7 @@ class Arpa(WordsetInterface, GzipOpener):
     def get_words(self, omit_tags=False):
         words = set()
         get_uni = False
-        with self.open(self._lm_path) as fin:
+        with self.open_file(self._lm_path) as fin:
             line = fin.readline()
             try:
                 while line:
@@ -474,7 +474,7 @@ class Arpa(WordsetInterface, GzipOpener):
         :return: sum of all ngrams
         """
         sum_ = 0
-        with self.open(self._lm_path) as fin:
+        with self.open_file(self._lm_path) as fin:
             for line in fin:
                 if line.find("ngram ") == 0:
                     try:
@@ -491,7 +491,7 @@ class Arpa(WordsetInterface, GzipOpener):
         :return: count of unigrams
         """
         counter = 0
-        with self.open(self._lm_path) as fin:
+        with self.open_file(self._lm_path) as fin:
             for line in fin:
                 counter += 1
                 if line.find("ngram 1=") == 0:
@@ -505,7 +505,7 @@ class Arpa(WordsetInterface, GzipOpener):
     def get_unigrams(self):
         words = dict()
         get_uni = False
-        with self.open(self._lm_path) as fin:
+        with self.open_file(self._lm_path) as fin:
             line = fin.readline()
             try:
                 while line:
@@ -527,7 +527,7 @@ class Arpa(WordsetInterface, GzipOpener):
 
     def get_ngram_counts(self):
         output = list()
-        with self.open(self._lm_path) as fin:
+        with self.open_file(self._lm_path) as fin:
             line = fin.readline()
             while line:
                 if line.find("ngram ") == 0:
@@ -547,7 +547,7 @@ class Arpa(WordsetInterface, GzipOpener):
         wordset_words.update(Arpa.tags)
         if omit_annotations_tags:
             wordset_words.update(Arpa.optional_tags)
-        with self.open(self._lm_path) as fin:
+        with self.open_file(self._lm_path) as fin:
             in_unigram_section = False
             line_num = 0
             for l in fin:
@@ -584,7 +584,7 @@ class Arpa(WordsetInterface, GzipOpener):
 
     def re_sub_low_memory(self, output_arpa_path, regex, replacement):
         assert isinstance(regex, typing.Pattern)
-        with self.open(self._lm_path) as fin, open(output_arpa_path, "w") as fout:
+        with self.open_file(self._lm_path) as fin, open(output_arpa_path, "w") as fout:
             line = fin.readline()
             try:
                 while line:
