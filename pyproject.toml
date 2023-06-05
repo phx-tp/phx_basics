@@ -10,9 +10,11 @@ authors = [
 ]
 description = """
   Simple package with simple functions and classes.
-  No dependencies.
+  Minimum dependencies of small packages.
   Package is developed by/for Phonexia researchers"""
-
+dependencies = [
+  "typeguard"
+]
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
