@@ -3,7 +3,7 @@ import logging
 
 from typeguard import typechecked
 
-from phx_general.phx_logging import phx_logging_format
+from phx_general.logging import logging_format
 
 
 @typechecked
@@ -26,7 +26,7 @@ class ArgParser:
 
     def __call__(self):
         args = self.parser.parse_args()
-        logging.basicConfig(format=phx_logging_format(),
+        logging.basicConfig(format=logging_format(),
                             level=logging.DEBUG if args.debug else (logging.WARNING if args.warning else logging.INFO),
                             filename=args.log,
                             filemode="w")

@@ -214,8 +214,4 @@ def calculate_net_speech(audio_list,
     return vad_segmentation.get_length()
 
 
-def calculate_audio_full_length(audio_list):
-    sum_audio_length = 0
-    for audio in audio_list:
-        sum_audio_length += get_wav_length(audio)
-    return sum_audio_length
+

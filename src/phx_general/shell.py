@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 
 from phx_general.file import check_file, check_dir
-from phx_general.phx_logging import phx_logging_format
+from phx_general.logging import logging_format
 
 _logger = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class ShellLogger(logging.Logger):
         h.setLevel(logging.DEBUG)
         h.addFilter(LogFilter(levels))
         if self.use_logging:
-            h.setFormatter(logging.Formatter(phx_logging_format()))
+            h.setFormatter(logging.Formatter(logging_format()))
         else:
             h.setFormatter(logging.Formatter('%(message)s'))
         self.addHandler(h)

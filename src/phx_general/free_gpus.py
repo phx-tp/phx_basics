@@ -3,7 +3,6 @@ import re
 import tempfile
 
 from typeguard import typechecked
-
 from phx_general.file import file2list
 from phx_general.shell import shell
 
@@ -13,6 +12,13 @@ def free_gpu():
     Get id as string of first free GPU
     """
     return NvidiaSMIParser().get_free_gpu()
+
+
+def free_gpus(delimiter=","):
+    """
+    Get ids as string of first free GPU
+    """
+    return delimiter.join(NvidiaSMIParser().get_free_gpus())
 
 
 @typechecked
