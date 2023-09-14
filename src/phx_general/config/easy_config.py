@@ -4,7 +4,7 @@ import yaml
 from enum import Enum
 
 from phx_general.file import check_file
-from phx_general.type import path_type
+from phx_general.type import PathType
 
 class EasyType(Enum):
     """
@@ -37,7 +37,7 @@ class EasyOptVariable(EasyVariable):
 
 
 class EasyCfg:
-    def __init__(self, config_path: path_type):
+    def __init__(self, config_path: PathType):
         self._config_path = config_path
         self._load_config()
 

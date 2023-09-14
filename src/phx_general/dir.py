@@ -3,11 +3,11 @@ import os
 import zipfile
 from pathlib import Path
 from typeguard import typechecked
-from phx_general.type import path_type
+from phx_general.type import PathType
 
 
 @typechecked
-def check_dir(filepath: path_type):
+def check_dir(filepath: PathType):
     if not Path(filepath).is_dir():
         if Path(filepath).is_file():
             raise NotADirectoryError(f"Path '{str(filepath)}' is file, not directory")
@@ -16,7 +16,7 @@ def check_dir(filepath: path_type):
 
 
 @typechecked
-def mkpdirp(file_path: path_type):
+def mkpdirp(file_path: PathType):
     """
     Create parent directory of file (can be dir too), no error if existing, make parent directories as needed
     :param file_path: file path
@@ -29,7 +29,7 @@ def mkpdirp(file_path: path_type):
     os.makedirs(directory, exist_ok=True)
 
 
-def zip_folder(folder_path: path_type, output_path: path_type):
+def zip_folder(folder_path: PathType, output_path: PathType):
     """
     Zip the contents of an entire folder (without that folder included
     in the archive). Empty subfolders will be included in the archive

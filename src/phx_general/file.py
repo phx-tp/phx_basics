@@ -13,11 +13,11 @@ from pathlib import Path
 from typing import Iterable
 from typeguard import typechecked
 from phx_general.dir import check_dir
-from phx_general.type import path_type
+from phx_general.type import PathType
 
 
 @typechecked
-def check_file(filepath: path_type):
+def check_file(filepath: PathType):
     if not Path(filepath).is_file():
         if Path(filepath).is_dir():
             raise FileExistsError(f"Path '{str(filepath)}' is directory, not file")
@@ -26,7 +26,7 @@ def check_file(filepath: path_type):
 
 
 @typechecked
-def file2list(file_path: path_type, strip=True):
+def file2list(file_path: PathType, strip=True):
     """
     Source file to list
     :param strip: (bool) if to strip every line
@@ -45,7 +45,7 @@ def file2list(file_path: path_type, strip=True):
 
 
 @typechecked
-def file2set(file_path: path_type):
+def file2set(file_path: PathType):
     """
     load set from file where every striped line from file added
     :param file_path: path to input file
@@ -59,7 +59,7 @@ def file2set(file_path: path_type):
     return l_set
 
 
-def list2file(lines: Iterable, file_path: path_type, add_sep=True):
+def list2file(lines: Iterable, file_path: PathType, add_sep=True):
     """
     Write list to file one row by row
     :param add_sep: (bool) add line separator to the end of every line
@@ -76,7 +76,7 @@ def list2file(lines: Iterable, file_path: path_type, add_sep=True):
             fout.writelines(lines)
 
 
-def file2dict(file_path: path_type, sep="\t"):
+def file2dict(file_path: PathType, sep="\t"):
     """
     source dictionary from file where first column is key and second is value
     :param file_path: path to input file
@@ -95,7 +95,7 @@ def file2dict(file_path: path_type, sep="\t"):
     return out_dict
 
 
-def file2iter(file_path: path_type, strip=True):
+def file2iter(file_path: PathType, strip=True):
     """
     Source file to iterator
     :param strip: (bool) if to strip every line
@@ -111,7 +111,7 @@ def file2iter(file_path: path_type, strip=True):
                 yield line
 
 
-def safe_copy(src: path_type, dst: path_type):
+def safe_copy(src: PathType, dst: PathType):
     """
     copy file even if dst exists and even dst is a symlink
     """
@@ -123,7 +123,7 @@ def safe_copy(src: path_type, dst: path_type):
     shutil.copy(src, dst)
 
 
-def file2id_dict(file: path_type, strip: bool = True, delimiter: str = "\t"):
+def file2id_dict(file: PathType, strip: bool = True, delimiter: str = "\t"):
     """
     Source file and save to Dict[str, List[tuple[str]]], when key is first column. Keys can be repeated but must be
     sorted (). This format is usually used in KALDI. Value is List of rest of columns saved as tuple.

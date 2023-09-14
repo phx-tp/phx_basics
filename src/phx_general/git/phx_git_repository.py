@@ -13,7 +13,7 @@ from phx_secure.gitlab import SecurePhxGitRepository
 from phx_general.file import file2list
 from phx_general.shell import shell
 
-from phx_general.type import path_type
+from phx_general.type import PathType
 
 _logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class PhxGitRepository(SecurePhxGitRepository):
 
         self._repository = PhxGitRepository.KNOWN_PHX_REPOSITORIES[repository]
 
-    def download_files(self, mode: str, input: Union[path_type, Iterable[path_type]], output_dir, use_sub_dirs=False):
+    def download_files(self, mode: str, input: Union[PathType, Iterable[PathType]], output_dir, use_sub_dirs=False):
         """
         @param mode One of InputMode enum's values
         @param input Either a list of strings (git paths) or list of files with git paths (one per line)
