@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "phx_general"
-version = "0.0.2"
+name = "phx_basics"
+version = "1.0.0"
 authors = [
   { name="Tomáš Pavlíček", email="tomas.pavlicek@phonexia.com" },
 ]
