@@ -12,8 +12,8 @@ import re
 from pathlib import Path
 from typing import Iterable
 from typeguard import typechecked
-from phx_general.dir import check_dir
-from phx_general.type import PathType
+from phx_basics.dir import check_dir
+from phx_basics.type import PathType
 
 
 @typechecked

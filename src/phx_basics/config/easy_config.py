@@ -3,8 +3,8 @@ import typeguard
 import yaml
 from enum import Enum
 
-from phx_general.file import check_file
-from phx_general.type import PathType
+from phx_basics.file import check_file
+from phx_basics.type import PathType
 
 class EasyType(Enum):
     """

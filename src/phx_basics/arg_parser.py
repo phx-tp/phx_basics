@@ -3,7 +3,7 @@ import logging
 
 from typeguard import typechecked
 
-from phx_general.logging_tools import logging_format
+from phx_basics.logging_tools import logging_format
 
 
 @typechecked

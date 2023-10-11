@@ -3,8 +3,8 @@ import re
 import tempfile
 
 from typeguard import typechecked
-from phx_general.file import file2list
-from phx_general.shell import shell
+from phx_basics.file import file2list
+from phx_basics.shell import shell
 
 
 def free_gpu():

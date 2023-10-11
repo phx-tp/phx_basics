@@ -3,7 +3,7 @@ import os
 import zipfile
 from pathlib import Path
 from typeguard import typechecked
-from phx_general.type import PathType
+from phx_basics.type import PathType
 
 
 @typechecked

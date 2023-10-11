@@ -4,7 +4,7 @@ import os
 import typing
 import logging
 import yaml
-from phx_general.file import check_file, list2file
+from phx_basics.file import check_file, list2file
 
 from pydantic import dataclasses
 from enum import Enum

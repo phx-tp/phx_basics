@@ -3,8 +3,8 @@ import os
 import subprocess
 from pathlib import Path
 
-from phx_general.file import check_file, check_dir
-from phx_general.logging_tools import logging_format
+from phx_basics.file import check_file, check_dir
+from phx_basics.logging_tools import logging_format
 
 _logger = logging.getLogger(__name__)
 
