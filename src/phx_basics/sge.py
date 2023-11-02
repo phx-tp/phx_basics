@@ -49,12 +49,17 @@ class SGE:
                               sync: bool = True,
                               conda_env_name: Union[str, None] = None,
                               gpus: int = 0,
+                              gpu_memory: int = 0,
                               pe_name: str = "smp",
                               cpus: int = 1):
         run_file_lines = list()
 
         run_file_lines.append("#$ -S /bin/bash")
         resources = f"#$ -l ram_free={memory_alloc}G,mem_free={memory_alloc}G"
+        if gpu_memory > 0:
+            resources += f",gpu_ram={gpu_memory}G"
+            if gpus < 1:
+                gpus = 1
         if gpus > 0:
             resources += f",gpu={gpus}"
         run_file_lines.append(resources)
