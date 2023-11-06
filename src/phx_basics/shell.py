@@ -14,7 +14,6 @@ class LogFilter(logging.Filter):
     """
     Logging filter that filter only levels defined in constructor
     """
-
     def __init__(self, levels):
         """
         Create logging filter with defined levels to pass
