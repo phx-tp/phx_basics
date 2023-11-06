@@ -1,6 +1,7 @@
 import logging
 import os
 import subprocess
+import shlex
 from pathlib import Path
 
 from phx_basics.file import check_file, check_dir
@@ -13,6 +14,7 @@ class LogFilter(logging.Filter):
     """
     Logging filter that filter only levels defined in constructor
     """
+
     def __init__(self, levels):
         """
         Create logging filter with defined levels to pass
@@ -78,7 +80,7 @@ class ShellLogger(logging.Logger):
 
 
 def shell(cmd, cwd=None, input_string=None, stdout=None, stderr=None, use_logging=False, debug=False, check=True,
-          env=None, shell=False, truncate_last_newline=True):
+          env=None, shell=False, truncate_last_newline=True, ext_logger=None):
     """
     Run shell command in subshell
     :param cmd: (list) command to run
@@ -89,7 +91,8 @@ def shell(cmd, cwd=None, input_string=None, stdout=None, stderr=None, use_loggin
     :param use_logging: use logging for output
     :param check: raise exception when return code from subprocess is not 0
     :param truncate_last_newline: delete last newline in stdout file if present
-    :return:
+    :param ext_logger: Use external logger instead of the local.
+    :return: Return output of the subprocess.run
     """
     def check_log(log):
         """
@@ -130,15 +133,18 @@ def shell(cmd, cwd=None, input_string=None, stdout=None, stderr=None, use_loggin
     assert type(check) == bool
     if cwd is not None:
         check_dir(cwd)
-    check_log(stdout)
-    check_log(stderr)
-    _logger.debug(f"Running command: '{' '.join(cmd)}'")
-    logger = ShellLogger(use_logging)
-    if stdout == stderr and stdout is not None:
-        logger.addFilteredHandler(stdout, [logging.DEBUG if debug else logging.INFO, logging.ERROR])
+    if ext_logger is not None:
+        logger = ext_logger
     else:
-        logger.addFilteredHandler(stdout, logging.DEBUG if debug else logging.INFO)
-        logger.addFilteredHandler(stderr, logging.ERROR)
+        check_log(stdout)
+        check_log(stderr)
+        _logger.debug(f"Running command: '{' '.join(cmd)}'")
+        logger = ShellLogger(use_logging)
+        if stdout == stderr and stdout is not None:
+            logger.addFilteredHandler(stdout, [logging.DEBUG if debug else logging.INFO, logging.ERROR])
+        else:
+            logger.addFilteredHandler(stdout, logging.DEBUG if debug else logging.INFO)
+            logger.addFilteredHandler(stderr, logging.ERROR)
     try:
         result = subprocess.run(cmd, input=input_string, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 universal_newlines=True, check=check, cwd=cwd, env=env, shell=shell)
@@ -154,3 +160,47 @@ def shell(cmd, cwd=None, input_string=None, stdout=None, stderr=None, use_loggin
     if truncate_last_newline:
         truncate(stdout)
         truncate(stderr)
+    return result
+
+
+def shell_source(script, update_env=False):
+    """
+    A function to emulate the action of 'source env.sh' respectively '. env.sh' in shell.
+    :param script: Path to an environment setup script with variables, compatible with shell (no tricky loops etc.)
+    :param update_env: If True, it will set or update environment variables in os.environ .
+    :return: Return dictionary with variables extracted from the script
+    """
+    pipe = subprocess.Popen(". %s && env -0" % script, stdout=subprocess.PIPE, shell=True)
+    output = pipe.communicate()[0].decode('utf-8')
+    output = output[:-1]  # fix for index out for range in 'env[ line[0] ] = line[1]'
+
+    env = {}
+    # split using null char
+    for line in output.split('\x00'):
+        line = line.split('=', 1)
+        if len(line) != 2:
+            continue
+        env[line[0]] = line[1]
+
+    if update_env:
+        os.environ.update(env)
+    return env
+
+
+def bash_source(script):
+    """
+    This function runs a bash command to `source script` and get the environment variables.
+    Use this function instead of `shell_source` when the environment script use loops and
+    other POSIX shell incompatible syntax.
+    It will automatically set or update environment variables in os.environ .
+    :param script: Path to an environment setup script with variables, compatible with bash.
+    :return: Return dictionary with variables extracted from the script
+    """
+    command = shlex.split(f"bash -c 'source {script} && env'")
+    proc = subprocess.Popen(command, stdout=subprocess.PIPE)
+    for line in proc.stdout:
+        key, _, value = line.decode().partition("=")  # line.decode().strip().partition("=")
+        os.environ[key] = value
+    proc.communicate()
+    env_vars = dict(os.environ)
+    return env_vars
