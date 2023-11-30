@@ -3,6 +3,8 @@ import re
 import tempfile
 
 from typeguard import typechecked
+
+from phx_basics.arg_parser import ArgParser
 from phx_basics.file import file2list
 from phx_basics.shell import shell
 
@@ -71,7 +73,7 @@ class NvidiaSMIParser:
             if used_memory:
                 assert len(used_memory) == 1
                 int_used_memory = int(used_memory[0])
-                if int_used_memory <= 4:  # if memory is lower than 4 MB
+                if int_used_memory <= 8:  # if memory is lower than 4 MB
                     gpu_indexes.add(index)
                 index += 1
         return gpu_indexes, index
@@ -86,7 +88,13 @@ class NoFreeGpu(ValueError):
 
 
 def main():
-    print(free_gpu())
+    ap = ArgParser()
+    ap.parser.add_argument("-a", "--all_gpus", action="store_true", help="Set id of gpu for computation", default=False)
+    args = ap()
+    if args.a:
+        print(free_gpus())
+    else:
+        print(free_gpu())
 
 
 if __name__ == '__main__':
