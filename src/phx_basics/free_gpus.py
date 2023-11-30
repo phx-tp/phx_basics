@@ -91,7 +91,7 @@ def main():
     ap = ArgParser()
     ap.parser.add_argument("-a", "--all_gpus", action="store_true", help="Set id of gpu for computation", default=False)
     args = ap()
-    if args.a:
+    if args.all_gpus:
         print(free_gpus())
     else:
         print(free_gpu())
