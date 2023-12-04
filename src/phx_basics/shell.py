@@ -103,7 +103,7 @@ def shell(cmd, cwd=None, input_string=None, stdout=None, stderr=None, use_loggin
             if os.path.isfile(log):
                 check_file(log)
             else:
-                check_dir(os.path.dirname(os.path.realpath(log)), "w")
+                check_dir(os.path.dirname(os.path.realpath(log)))
 
     def check_command(command):
         """
