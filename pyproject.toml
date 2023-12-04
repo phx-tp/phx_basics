@@ -13,7 +13,8 @@ description = """
   Minimum dependencies of small packages.
   Package is developed by/for Phonexia researchers"""
 dependencies = [
-  "typeguard"
+  "typeguard",
+  "gitpython",
 ]
 readme = "README.md"
 requires-python = ">=3.9"
