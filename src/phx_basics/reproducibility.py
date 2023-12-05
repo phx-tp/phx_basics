@@ -176,6 +176,6 @@ def backup_codebase(backup_output_dir, repository_root=None, compress=True):
             for f in files:
                 f = os.path.join(root, f)
                 assert os.stat(f).st_size <  5e+7, os.stat(f).st_size  # don't allow files bigger than 50 MB in the repo
-        shutil.copytree(repository_root, out_path)
+        shutil.copytree(repository_root, out_path, ignore=shutil.ignore_patterns('.git'))
 
     return out_path
