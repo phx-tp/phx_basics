@@ -51,7 +51,8 @@ class SGE:
                               gpus: int = 0,
                               gpu_memory: int = 0,
                               pe_name: str = "smp",
-                              cpus: int = 1):
+                              cpus: int = 1,
+                              job_name: Union[str, None] = None):
         run_file_lines = list()
 
         run_file_lines.append("#$ -S /bin/bash")
@@ -67,7 +68,7 @@ class SGE:
         if sync:
             run_file_lines.append("#$ -sync yes")
         output_file = Path(output_file).absolute()
-        run_file_lines.append(f"#$ -N {output_file.name}")  # job name
+        run_file_lines.append(f"#$ -N {job_name if job_name else output_file.name}")  # job name
         run_file_lines.append(f"#$ -o {output_file}.$JOB_ID")  # output file
         run_file_lines.append(f"#$ -e {str(output_file)}.$JOB_ID{cls._error_file_suffix}")  # error file
         cpus = check_cores(cpus)
