@@ -37,14 +37,35 @@ class EasyOptVariable(EasyVariable):
 
 
 class EasyCfg:
+    """
+    This class is intended to be used as a base class for yaml config object. It simply loads the config from a yaml
+    file and assign predefined variables and check its types.
+
+    This class should be first inherited and class variables should be defined as EasyVariable or EasyOptVariable
+    classes, where EasyOptVariable variables are optional and doesnt have to be present in the config file.
+    The default value is set instead.
+
+    Example:
+        class TrainConfig(EasyCfg):
+            fea_type = EasyVariable(EasyType.STRING)
+            workdir = EasyVariable(EasyType.STRING)
+            experiment_name = EasyVariable(EasyType.STRING)
+
+        cfg = TrainConfig("/path/to/config.yaml")
+
+    """
+
     def __init__(self, config_path: PathType):
         self._config_path = config_path
         self._load_config()
 
     def _load_config(self):
+        cfg_variables = self._load_yaml()
+        self._check_and_assign_variables()
+
+    def _check_and_assign_variables(self, cfg_variables):
         attribute_names = [attr for attr in dir(self) if not callable(getattr(self, attr)) and
                            not attr.startswith("__") and not attr.startswith("_")]
-        cfg_variables = self._load_yaml()
         for attribute_name in attribute_names:
             attribute = getattr(self, attribute_name)
             if isinstance(attribute, EasyOptVariable):
@@ -54,7 +75,7 @@ class EasyCfg:
                     self._set_attr(attribute_name, attribute.type, attribute.default_value, attribute.can_be_none)
             elif isinstance(attribute, EasyVariable):
                 if attribute_name not in cfg_variables:
-                    raise ValueError(f"Variable '{attribute_name}' is missing in config '{self._config_path}'")
+                    raise ValueError(f"Variable '{attribute_name}' is missing in variables '{cfg_variables}'")
                 self._set_attr(attribute_name, attribute.type, cfg_variables[attribute_name], attribute.can_be_none)
             else:
                 raise ValueError(f"Attribute '{attribute_name}' must be instance of EasyVariable.")
