@@ -95,10 +95,11 @@ def file2dict(file_path: PathType, sep="\t"):
     return out_dict
 
 
-def file2iter(file_path: PathType, strip=True):
+def file2iter(file_path: PathType, strip=True, split=False):
     """
     Source file to iterator
-    :param strip: (bool) if to strip every line
+    :param strip: (bool) strip every line
+    :param split: (bool) split every line
     :param file_path: file to source
     :return: iterator per line
     """
@@ -106,9 +107,9 @@ def file2iter(file_path: PathType, strip=True):
     with open(file_path) as fin:
         for line in fin:
             if strip:
-                yield line.strip()
+                yield line.strip() if split is not None else line.strip().split()
             else:
-                yield line
+                yield line if split is not None else line.split()
 
 
 def safe_copy(src: PathType, dst: PathType):
