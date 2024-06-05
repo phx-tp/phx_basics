@@ -60,8 +60,7 @@ class EasyCfg:
         self._load_config()
 
     def _load_config(self):
-        cfg_variables = self._load_yaml()
-        self._check_and_assign_variables()
+        self._check_and_assign_variables(self._load_yaml())
 
     def _check_and_assign_variables(self, cfg_variables):
         attribute_names = [attr for attr in dir(self) if not callable(getattr(self, attr)) and
