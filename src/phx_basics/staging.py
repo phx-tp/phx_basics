@@ -17,6 +17,10 @@ class SimpleStage:
     Stage will check if 'done' file exists and if so stage is skipped.
     If stage is processed the 'done' file is created in the end of stage.
     Cons: This solution uses sys._getframe() which can be unstable
+    Usage:
+        SimpleStage.directory = "DIRECTORY/WITH/STAGING/FILES"
+        with SimpleStage("NAME_OF_STAGE"):
+            <staged_code>
     """
     directory = None
 
